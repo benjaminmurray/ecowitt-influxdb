@@ -20,6 +20,7 @@ import (
 type configuration struct {
 	Port     int
 	Logfile  string
+	Names    map[string]string
 	Influxdb influxdbConfiguration
 }
 
@@ -58,7 +59,21 @@ func reportData(w http.ResponseWriter, r *http.Request) {
 		writeJSON(config.Logfile, originalData)
 	}
 	timestamp, fields := convertData(originalData)
+	fields = renameFields(fields, config.Names)
 	insertData(timestamp, fields)
+}
+
+func renameFields(oldFields map[string]interface{}, names map[string]string) map[string]interface{} {
+	newFields := map[string]interface{}{}
+	for oldName, value := range oldFields {
+		newName, exists := names[oldName]
+		if exists {
+			newFields[newName] = value
+		} else {
+			newFields[oldName] = value
+		}
+	}
+	return newFields
 }
 
 func convertData(originalData map[string]string) (time.Time, map[string]interface{}) {
@@ -272,6 +287,7 @@ func main() {
 	if *testFileName != "" {
 		data := readJSON(*testFileName)
 		timestamp, fields := convertData(data)
+		fields = renameFields(fields, config.Names)
 		fmt.Println("timestamp =", timestamp)
 		json, err := json.MarshalIndent(fields, "", "  ")
 		if err == nil {

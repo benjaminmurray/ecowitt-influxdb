@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -11,8 +12,7 @@ import (
 	"strconv"
 	"time"
 
-	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
-	client "github.com/influxdata/influxdb1-client/v2"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/martinlindhe/unit"
 	"github.com/pelletier/go-toml"
 )
@@ -25,45 +25,27 @@ type configuration struct {
 
 type influxdbConfiguration struct {
 	Address     string
-	Username    string
-	Password    string
-	Database    string
+	Token       string
+	Org         string
+	Bucket      string
 	Measurement string
 }
 
 var config configuration
 
 func insertData(timestamp time.Time, fields map[string]interface{}) {
-	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     config.Influxdb.Address,
-		Username: config.Influxdb.Username,
-		Password: config.Influxdb.Password,
-	})
+	// create new client with default option for server url authenticate by token
+	client := influxdb2.NewClient(config.Influxdb.Address, config.Influxdb.Token)
+	defer client.Close()
+	// Use blocking write client for writes to desired bucket
+	writeAPI := client.WriteAPIBlocking(config.Influxdb.Org, config.Influxdb.Bucket)
+	// Create point
+	p := influxdb2.NewPoint(config.Influxdb.Measurement, nil, fields, timestamp)
+	// write point immediately
+	err := writeAPI.WritePoint(context.Background(), p)
 	if err != nil {
 		log.Println(err)
-		return
 	}
-	defer c.Close()
-	_, _, err = c.Ping(500 * time.Millisecond)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  config.Influxdb.Database,
-		Precision: "s",
-	})
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	pt, err := client.NewPoint(config.Influxdb.Measurement, nil, fields, timestamp)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	bp.AddPoint(pt)
-	c.Write(bp)
 }
 
 func reportData(w http.ResponseWriter, r *http.Request) {

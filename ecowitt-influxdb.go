@@ -45,7 +45,7 @@ func insertData(timestamp time.Time, fields map[string]interface{}) {
 	// write point immediately
 	err := writeAPI.WritePoint(context.Background(), p)
 	if err != nil {
-		log.Println(err)
+		log.Println(fmt.Errorf("writing to database: %w", err))
 	}
 }
 
@@ -80,167 +80,175 @@ func convertData(originalData map[string]string) (time.Time, map[string]interfac
 	var timestamp time.Time
 	v, exists := originalData["dateutc"]
 	if exists {
-		timestamp = convertTime(v)
+		var err error
+		timestamp, err = convertTime(v)
+		if err != nil {
+			log.Println(fmt.Errorf("converting field \"dateutc\": %w", err))
+		}
 	}
 
 	fields := map[string]interface{}{}
 	for k, v := range originalData {
+		var err error
 		switch k {
 		case "baromabsin":
-			fields["barometer_abs"] = convertBarometer(v)
+			fields["barometer_abs"], err = convertBarometer(v)
 		case "baromrelin":
-			fields["barometer_rel"] = convertBarometer(v)
+			fields["barometer_rel"], err = convertBarometer(v)
 
 		case "windspeedmph":
-			fields["wind_speed"] = convertWindSpeed(v)
+			fields["wind_speed"], err = convertWindSpeed(v)
 		case "windgustmph":
-			fields["wind_gust"] = convertWindSpeed(v)
+			fields["wind_gust"], err = convertWindSpeed(v)
 		case "maxdailygust":
-			fields["wind_gust_daily_max"] = convertWindSpeed(v)
+			fields["wind_gust_daily_max"], err = convertWindSpeed(v)
 		case "winddir":
-			fields["wind_dir"] = convertFloat(v)
+			fields["wind_dir"], err = convertFloat(v)
 
 		case "dailyrainin":
-			fields["rain_daily"] = convertRain(v)
+			fields["rain_daily"], err = convertRain(v)
 		case "eventrainin":
-			fields["rain_event"] = convertRain(v)
+			fields["rain_event"], err = convertRain(v)
 		case "hourlyrainin":
-			fields["rain_hourly"] = convertRain(v)
+			fields["rain_hourly"], err = convertRain(v)
 		case "monthlyrainin":
-			fields["rain_monthly"] = convertRain(v)
+			fields["rain_monthly"], err = convertRain(v)
 		case "rainratein":
-			fields["rain_rate"] = convertRain(v)
+			fields["rain_rate"], err = convertRain(v)
 		case "totalrainin":
-			fields["rain_total"] = convertRain(v)
+			fields["rain_total"], err = convertRain(v)
 		case "weeklyrainin":
-			fields["rain_weekly"] = convertRain(v)
+			fields["rain_weekly"], err = convertRain(v)
 		case "yearlyrainin":
-			fields["rain_yearly"] = convertRain(v)
+			fields["rain_yearly"], err = convertRain(v)
 
 		case "tempf":
-			fields["temperature_out"] = convertTemperature(v)
+			fields["temperature_out"], err = convertTemperature(v)
 		case "tempinf":
-			fields["temperature_in_0"] = convertTemperature(v)
+			fields["temperature_in_0"], err = convertTemperature(v)
 		case "temp1f":
-			fields["temperature_in_1"] = convertTemperature(v)
+			fields["temperature_in_1"], err = convertTemperature(v)
 		case "temp2f":
-			fields["temperature_in_2"] = convertTemperature(v)
+			fields["temperature_in_2"], err = convertTemperature(v)
 		case "temp3f":
-			fields["temperature_in_3"] = convertTemperature(v)
+			fields["temperature_in_3"], err = convertTemperature(v)
 		case "temp4f":
-			fields["temperature_in_4"] = convertTemperature(v)
+			fields["temperature_in_4"], err = convertTemperature(v)
 		case "temp5f":
-			fields["temperature_in_5"] = convertTemperature(v)
+			fields["temperature_in_5"], err = convertTemperature(v)
 		case "temp6f":
-			fields["temperature_in_6"] = convertTemperature(v)
+			fields["temperature_in_6"], err = convertTemperature(v)
 		case "temp7f":
-			fields["temperature_in_7"] = convertTemperature(v)
+			fields["temperature_in_7"], err = convertTemperature(v)
 		case "temp8f":
-			fields["temperature_in_8"] = convertTemperature(v)
+			fields["temperature_in_8"], err = convertTemperature(v)
 
 		case "solarradiation":
-			fields["radiation"] = convertFloat(v)
+			fields["radiation"], err = convertFloat(v)
 		case "uv":
-			fields["uv"] = convertInt(v)
+			fields["uv"], err = convertInt(v)
 
 		case "humidity":
-			fields["humidity_out"] = convertFloat(v)
+			fields["humidity_out"], err = convertFloat(v)
 		case "humidityin":
-			fields["humidity_in_0"] = convertFloat(v)
+			fields["humidity_in_0"], err = convertFloat(v)
 		case "humidity1":
-			fields["humidity_in_1"] = convertFloat(v)
+			fields["humidity_in_1"], err = convertFloat(v)
 		case "humidity2":
-			fields["humidity_in_2"] = convertFloat(v)
+			fields["humidity_in_2"], err = convertFloat(v)
 		case "humidity3":
-			fields["humidity_in_3"] = convertFloat(v)
+			fields["humidity_in_3"], err = convertFloat(v)
 		case "humidity4":
-			fields["humidity_in_4"] = convertFloat(v)
+			fields["humidity_in_4"], err = convertFloat(v)
 		case "humidity5":
-			fields["humidity_in_5"] = convertFloat(v)
+			fields["humidity_in_5"], err = convertFloat(v)
 		case "humidity6":
-			fields["humidity_in_6"] = convertFloat(v)
+			fields["humidity_in_6"], err = convertFloat(v)
 		case "humidity7":
-			fields["humidity_in_7"] = convertFloat(v)
+			fields["humidity_in_7"], err = convertFloat(v)
 		case "humidity8":
-			fields["humidity_in_8"] = convertFloat(v)
+			fields["humidity_in_8"], err = convertFloat(v)
 
 		case "soilmoisture1":
-			fields["soil_moisture_1"] = convertFloat(v)
+			fields["soil_moisture_1"], err = convertFloat(v)
 		case "soilmoisture2":
-			fields["soil_moisture_2"] = convertFloat(v)
+			fields["soil_moisture_2"], err = convertFloat(v)
 		case "soilmoisture3":
-			fields["soil_moisture_3"] = convertFloat(v)
+			fields["soil_moisture_3"], err = convertFloat(v)
 		case "soilmoisture4":
-			fields["soil_moisture_4"] = convertFloat(v)
+			fields["soil_moisture_4"], err = convertFloat(v)
 		case "soilmoisture5":
-			fields["soil_moisture_5"] = convertFloat(v)
+			fields["soil_moisture_5"], err = convertFloat(v)
 		case "soilmoisture6":
-			fields["soil_moisture_6"] = convertFloat(v)
+			fields["soil_moisture_6"], err = convertFloat(v)
 		case "soilmoisture7":
-			fields["soil_moisture_7"] = convertFloat(v)
+			fields["soil_moisture_7"], err = convertFloat(v)
 		case "soilmoisture8":
-			fields["soil_moisture_8"] = convertFloat(v)
+			fields["soil_moisture_8"], err = convertFloat(v)
 
 		case "wh65batt":
-			fields["battery_wh65"] = convertFloat(v)
+			fields["battery_wh65"], err = convertFloat(v)
 		case "batt1":
-			fields["battery_in_1"] = convertFloat(v)
+			fields["battery_in_1"], err = convertFloat(v)
 		case "batt2":
-			fields["battery_in_2"] = convertFloat(v)
+			fields["battery_in_2"], err = convertFloat(v)
 		case "soilbatt1":
-			fields["battery_soil_1"] = convertFloat(v)
+			fields["battery_soil_1"], err = convertFloat(v)
 		case "soilbatt2":
-			fields["battery_soil_2"] = convertFloat(v)
+			fields["battery_soil_2"], err = convertFloat(v)
+		}
+		if err != nil {
+			log.Println(fmt.Errorf("converting field \"%v\": %w", k, err))
 		}
 	}
 	return timestamp, fields
 }
 
-func convertFloat(s string) float64 {
-	x, _ := strconv.ParseFloat(s, 64)
-	return x
+func convertFloat(s string) (float64, error) {
+	x, err := strconv.ParseFloat(s, 64)
+	return x, err
 }
 
-func convertInt(s string) int64 {
-	x, _ := strconv.ParseInt(s, 10, 64)
-	return x
+func convertInt(s string) (int64, error) {
+	x, err := strconv.ParseInt(s, 10, 64)
+	return x, err
 }
 
-func convertTime(s string) time.Time {
-	timestamp, _ := time.Parse("2006-01-02 15:04:05", s)
-	return timestamp
+func convertTime(s string) (time.Time, error) {
+	timestamp, err := time.Parse("2006-01-02 15:04:05", s)
+	return timestamp, err
 }
 
 // Convert mph to kph
-func convertWindSpeed(s string) float64 {
-	x, _ := strconv.ParseFloat(s, 64)
+func convertWindSpeed(s string) (float64, error) {
+	x, err := strconv.ParseFloat(s, 64)
 	x = (unit.Speed(x) * unit.MilesPerHour).KilometersPerHour()
 	x = math.Round(x*10) / 10
-	return x
+	return x, err
 }
 
 // Convert inHg to hPa
-func convertBarometer(s string) float64 {
-	x, _ := strconv.ParseFloat(s, 64)
+func convertBarometer(s string) (float64, error) {
+	x, err := strconv.ParseFloat(s, 64)
 	x = x / 0.029530
 	x = math.Round(x*10) / 10
-	return x
+	return x, err
 }
 
 // Convert Fahrenheit to Celsius
-func convertTemperature(s string) float64 {
-	x, _ := strconv.ParseFloat(s, 64)
+func convertTemperature(s string) (float64, error) {
+	x, err := strconv.ParseFloat(s, 64)
 	x = unit.FromFahrenheit(x).Celsius()
 	x = math.Round(x*10) / 10
-	return x
+	return x, err
 }
 
 // Convert inches to millimeters
-func convertRain(s string) float64 {
-	x, _ := strconv.ParseFloat(s, 64)
+func convertRain(s string) (float64, error) {
+	x, err := strconv.ParseFloat(s, 64)
 	x = (unit.Length(x) * unit.Inch).Millimeters()
 	x = math.Round(x*10) / 10
-	return x
+	return x, err
 }
 
 func readJSON(fileName string) map[string]string {
@@ -278,10 +286,13 @@ func main() {
 	// Read configuration file
 	file, err := ioutil.ReadFile(*configFileName)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("reading configuration file \"%v\": %w", configFileName, err))
 	}
 	config = configuration{}
-	toml.Unmarshal(file, &config)
+	err = toml.Unmarshal(file, &config)
+	if err != nil {
+		log.Fatal(fmt.Errorf("parsing configuration file \"%v\": %w", configFileName, err))
+	}
 
 	// Do a test run
 	if *testFileName != "" {
@@ -299,8 +310,9 @@ func main() {
 
 	// Start http server
 	http.HandleFunc("/data/report/", reportData)
-	err = http.ListenAndServe(":"+strconv.Itoa(config.Port), nil)
+	addr := ":" + strconv.Itoa(config.Port)
+	err = http.ListenAndServe(addr, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("starting server on address \"%v\": %w", addr, err))
 	}
 }
